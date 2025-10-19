@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results & Analysis - AI Learning Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #1a2332;
+            --secondary: #c17817;
+            --tertiary: #7c9885;
+            --neutral: #f8f9fa;
+            --text: #2d3748;
+            --accent: #e53e3e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3748 50%, #1a2332 100%);
+            color: var(--neutral);
+            overflow-x: hidden;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--secondary), var(--tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), #d69e2e);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(193, 120, 23, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-link {
+            color: var(--neutral);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--secondary);
+        }
+        
+        .metric-card {
+            background: rgba(124, 152, 133, 0.1);
+            border: 1px solid rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            background: rgba(124, 152, 133, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .confusion-matrix {
+            display: grid;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        
+        .matrix-cell {
+            background: rgba(193, 120, 23, 0.3);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .matrix-cell:hover {
+            background: rgba(193, 120, 23, 0.5);
+            transform: scale(1.1);
+        }
+        
+        .feature-importance-bar {
+            height: 20px;
+            background: linear-gradient(90deg, var(--tertiary), var(--secondary));
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-importance-bar:hover {
+            height: 24px;
+            box-shadow: 0 2px 8px rgba(193, 120, 23, 0.3);
+        }
+        
+        .prediction-form {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .prediction-result {
+            background: rgba(124, 152, 133, 0.1);
+            border: 1px solid rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .export-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-option:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--secondary);
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--neutral);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background: var(--secondary);
+            border-color: var(--secondary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-20 backdrop-filter backdrop-blur-lg border-b border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">Learning Lab</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                    <a href="dataset.html" class="nav-link">Datasets</a>
+                    <a href="training.html" class="nav-link">Training</a>
+                    <a href="#results" class="nav-link text-orange-400">Results</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="btn-primary" onclick="exportModel()">Export Model</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="pt-24 pb-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                    <span class="gradient-text">Results & Analysis</span>
+                </h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Evaluate your model performance and make predictions
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Overview -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="metric-card">
+                    <div class="text-3xl mb-2">🏆</div>
+                    <div class="text-2xl font-bold gradient-text mb-1" id="model-accuracy">94.2%</div>
+                    <div class="text-sm text-gray-400">Model Accuracy</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <div class="text-2xl font-bold gradient-text mb-1" id="training-time">2.3s</div>
+                    <div class="text-sm text-gray-400">Training Time</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-3xl mb-2">📊</div>
+                    <div class="text-2xl font-bold gradient-text mb-1" id="model-type">Random Forest</div>
+                    <div class="text-sm text-gray-400">Algorithm</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <div class="text-2xl font-bold gradient-text mb-1" id="f1-score">0.941</div>
+                    <div class="text-sm text-gray-400">F1 Score</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analysis Tabs -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-wrap gap-4 mb-8">
+                <button class="tab-button active" onclick="switchTab('performance')">Performance Metrics</button>
+                <button class="tab-button" onclick="switchTab('confusion')">Confusion Matrix</button>
+                <button class="tab-button" onclick="switchTab('features')">Feature Importance</button>
+                <button class="tab-button" onclick="switchTab('predictions')">Make Predictions</button>
+                <button class="tab-button" onclick="switchTab('export')">Export & Share</button>
+            </div>
+            
+            <!-- Performance Metrics Tab -->
+            <div id="performance-tab" class="tab-content active">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="glass-card p-8">
+                        <h3 class="text-2xl font-bold mb-6">Performance Metrics</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span>Accuracy</span>
+                                <span class="font-bold gradient-text">94.2%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Precision</span>
+                                <span class="font-bold gradient-text">93.8%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Recall</span>
+                                <span class="font-bold gradient-text">94.6%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>F1 Score</span>
+                                <span class="font-bold gradient-text">94.1%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>AUC-ROC</span>
+                                <span class="font-bold gradient-text">97.3%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <h4 class="text-lg font-bold mb-4">ROC Curve</h4>
+                            <div id="roc-chart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card p-8">
+                        <h3 class="text-2xl font-bold mb-6">Training History</h3>
+                        <div id="training-history-chart" style="height: 400px;"></div>
+                        
+                        <div class="mt-6">
+                            <h4 class="text-lg font-bold mb-4">Model Details</h4>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Algorithm:</span>
+                                    <span>Random Forest Classifier</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Trees:</span>
+                                    <span>100</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Max Depth:</span>
+                                    <span>10</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Training Samples:</span>
+                                    <span>120</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Test Samples:</span>
+                                    <span>30</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Confusion Matrix Tab -->
+            <div id="confusion-tab" class="tab-content">
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-6">Confusion Matrix</h3>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-lg font-bold mb-4">Matrix Visualization</h4>
+                            <div class="confusion-matrix" id="confusion-matrix" style="grid-template-columns: repeat(3, 80px);">
+                                <!-- Matrix will be populated by JavaScript -->
+                            </div>
+                            
+                            <div class="mt-6 text-sm text-gray-400">
+                                <div class="flex items-center space-x-4 mb-2">
+                                    <div class="w-4 h-4 bg-orange-600"></div>
+                                    <span>True Positives: 28</span>
+                                </div>
+                                <div class="flex items-center space-x-4 mb-2">
+                                    <div class="w-4 h-4 bg-red-600"></div>
+                                    <span>False Positives: 2</span>
+                                </div>
+                                <div class="flex items-center space-x-4 mb-2">
+                                    <div class="w-4 h-4 bg-blue-600"></div>
+                                    <span>False Negatives: 1</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-4 h-4 bg-green-600"></div>
+                                    <span>True Negatives: 29</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-bold mb-4">Classification Report</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="border-b border-white border-opacity-10">
+                                            <th class="text-left py-2">Class</th>
+                                            <th class="text-left py-2">Precision</th>
+                                            <th class="text-left py-2">Recall</th>
+                                            <th class="text-left py-2">F1-Score</th>
+                                            <th class="text-left py-2">Support</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-white border-opacity-5">
+                                            <td class="py-2">Setosa</td>
+                                            <td class="py-2 gradient-text">1.00</td>
+                                            <td class="py-2 gradient-text">1.00</td>
+                                            <td class="py-2 gradient-text">1.00</td>
+                                            <td class="py-2">10</td>
+                                        </tr>
+                                        <tr class="border-b border-white border-opacity-5">
+                                            <td class="py-2">Versicolor</td>
+                                            <td class="py-2 gradient-text">0.93</td>
+                                            <td class="py-2 gradient-text">0.93</td>
+                                            <td class="py-2 gradient-text">0.93</td>
+                                            <td class="py-2">10</td>
+                                        </tr>
+                                        <tr class="border-b border-white border-opacity-5">
+                                            <td class="py-2">Virginica</td>
+                                            <td class="py-2 gradient-text">0.91</td>
+                                            <td class="py-2 gradient-text">0.91</td>
+                                            <td class="py-2 gradient-text">0.91</td>
+                                            <td class="py-2">10</td>
+                                        </tr>
+                                        <tr class="border-t border-white border-opacity-20">
+                                            <td class="py-2 font-bold">Accuracy</td>
+                                            <td class="py-2"></td>
+                                            <td class="py-2 gradient-text font-bold">0.94</td>
+                                            <td class="py-2"></td>
+                                            <td class="py-2 font-bold">30</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature Importance Tab -->
+            <div id="features-tab" class="tab-content">
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-6">Feature Importance</h3>
+                    
+                    <div class="space-y-4" id="feature-importance-list">
+                        <!-- Feature importance bars will be populated here -->
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h4 class="text-lg font-bold mb-4">Feature Correlation Matrix</h4>
+                        <div id="correlation-chart" style="height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Predictions Tab -->
+            <div id="predictions-tab" class="tab-content">
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-6">Make Predictions</h3>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="prediction-form">
+                            <h4 class="text-lg font-bold mb-4">Input Features</h4>
+                            <div class="space-y-4" id="prediction-inputs">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Sepal Length (cm)</label>
+                                    <input type="number" id="sepal-length" class="w-full p-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white" placeholder="5.1" step="0.1">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Sepal Width (cm)</label>
+                                    <input type="number" id="sepal-width" class="w-full p-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white" placeholder="3.5" step="0.1">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Petal Length (cm)</label>
+                                    <input type="number" id="petal-length" class="w-full p-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white" placeholder="1.4" step="0.1">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Petal Width (cm)</label>
+                                    <input type="number" id="petal-width" class="w-full p-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white" placeholder="0.2" step="0.1">
+                                </div>
+                                <button class="btn-primary w-full" onclick="makePrediction()">Predict</button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-lg font-bold mb-4">Prediction Results</h4>
+                            <div id="prediction-results" class="space-y-4">
+                                <div class="text-center text-gray-400 py-8">
+                                    <div class="text-4xl mb-4">🔮</div>
+                                    <p>Enter values and click predict to see results</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8">
+                                <h4 class="text-lg font-bold mb-4">Prediction Confidence</h4>
+                                <div id="confidence-chart" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Export Tab -->
+            <div id="export-tab" class="tab-content">
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-6">Export & Share</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="export-option" onclick="exportModel()">
+                            <div class="text-3xl mb-4">🤖</div>
+                            <h4 class="font-bold mb-2">Export Model</h4>
+                            <p class="text-sm text-gray-300">Download trained model for deployment</p>
+                            <div class="mt-4 text-xs text-gray-400">Format: TensorFlow.js</div>
+                        </div>
+                        
+                        <div class="export-option" onclick="exportResults()">
+                            <div class="text-3xl mb-4">📊</div>
+                            <h4 class="font-bold mb-2">Export Results</h4>
+                            <p class="text-sm text-gray-300">Download analysis results and metrics</p>
+                            <div class="mt-4 text-xs text-gray-400">Format: CSV, JSON, PDF</div>
+                        </div>
+                        
+                        <div class="export-option" onclick="generateReport()">
+                            <div class="text-3xl mb-4">📄</div>
+                            <h4 class="font-bold mb-2">Generate Report</h4>
+                            <p class="text-sm text-gray-300">Create comprehensive analysis report</p>
+                            <div class="mt-4 text-xs text-gray-400">Format: PDF, HTML</div>
+                        </div>
+                        
+                        <div class="export-option" onclick="shareProject()">
+                            <div class="text-3xl mb-4">🔗</div>
+                            <h4 class="font-bold mb-2">Share Project</h4>
+                            <p class="text-sm text-gray-300">Generate shareable project link</p>
+                            <div class="mt-4 text-xs text-gray-400">Public/Private link</div>
+                        </div>
+                        
+                        <div class="export-option" onclick="saveToLibrary()">
+                            <div class="text-3xl mb-4">📚</div>
+                            <h4 class="font-bold mb-2">Save to Library</h4>
+                            <p class="text-sm text-gray-300">Add to community model library</p>
+                            <div class="mt-4 text-xs text-gray-400">Public repository</div>
+                        </div>
+                        
+                        <div class="export-option" onclick="deployModel()">
+                            <div class="text-3xl mb-4">🚀</div>
+                            <h4 class="font-bold mb-2">Deploy Model</h4>
+                            <p class="text-sm text-gray-300">Deploy to cloud for production use</p>
+                            <div class="mt-4 text-xs text-gray-400">Cloud deployment</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">AI</span>
+                </div>
+                <span class="text-xl font-bold gradient-text">Learning Lab</span>
+            </div>
+            <p class="text-gray-400">
+                © 2025 AI Learning Lab. Empowering the next generation of machine learning practitioners.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Results Analysis Class
+        class ResultsAnalyzer {
+            constructor() {
+                this.currentTab = 'performance';
+                this.charts = {};
+                this.init();
+            }
+
+            init() {
+                this.setupCharts();
+                this.setupConfusionMatrix();
+                this.setupFeatureImportance();
+                this.animateMetrics();
+            }
+
+            setupCharts() {
+                this.setupROCChart();
+                this.setupTrainingHistoryChart();
+                this.setupCorrelationChart();
+                this.setupConfidenceChart();
+            }
+
+            setupROCChart() {
+                const chart = echarts.init(document.getElementById('roc-chart'));
+                
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: { color: '#ffffff' },
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#c17817',
+                        textStyle: { color: '#ffffff' }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'value',
+                        name: 'False Positive Rate',
+                        nameTextStyle: { color: '#ffffff' },
+                        axisLine: { lineStyle: { color: '#ffffff' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: 'True Positive Rate',
+                        nameTextStyle: { color: '#ffffff' },
+                        axisLine: { lineStyle: { color: '#ffffff' } }
+                    },
+                    series: [{
+                        name: 'ROC Curve',
+                        type: 'line',
+                        data: this.generateROCData(),
+                        itemStyle: { color: '#c17817' },
+                        areaStyle: { color: 'rgba(193, 120, 23, 0.3)' }
+                    }, {
+                        name: 'Random Classifier',
+                        type: 'line',
+                        data: [[0, 0], [1, 1]],
+                        itemStyle: { color: '#7c9885' },
+                        lineStyle: { type: 'dashed' }
+                    }]
+                };
+
+                chart.setOption(option);
+                this.charts.roc = chart;
+            }
+
+            setupTrainingHistoryChart() {
+                const chart = echarts.init(document.getElementById('training-history-chart'));
+                
+                const epochs = Array.from({length: 50}, (_, i) => i + 1);
+                const loss = epochs.map(e => 2.0 * Math.exp(-e/10) + Math.random() * 0.1);
+                const accuracy = epochs.map(e => 0.6 + 0.35 * (1 - Math.exp(-e/8)) + Math.random() * 0.05);
+                const valLoss = epochs.map(e => 2.0 * Math.exp(-e/12) + Math.random() * 0.15);
+                const valAccuracy = epochs.map(e => 0.6 + 0.35 * (1 - Math.exp(-e/10)) + Math.random() * 0.05);
+
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: { color: '#ffffff' },
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#c17817',
+                        textStyle: { color: '#ffffff' }
+                    },
+                    legend: {
+                        data: ['Training Loss', 'Training Accuracy', 'Validation Loss', 'Validation Accuracy'],
+                        textStyle: { color: '#ffffff' }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: epochs,
+                        name: 'Epoch',
+                        nameTextStyle: { color: '#ffffff' },
+                        axisLine: { lineStyle: { color: '#ffffff' } }
+                    },
+                    yAxis: [
+                        {
+                            type: 'value',
+                            name: 'Loss',
+                            nameTextStyle: { color: '#ffffff' },
+                            axisLine: { lineStyle: { color: '#ffffff' } }
+                        },
+                        {
+                            type: 'value',
+                            name: 'Accuracy',
+                            nameTextStyle: { color: '#ffffff' },
+                            axisLine: { lineStyle: { color: '#ffffff' } }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'Training Loss',
+                            type: 'line',
+                            data: loss,
+                            itemStyle: { color: '#c17817' }
+                        },
+                        {
+                            name: 'Training Accuracy',
+                            type: 'line',
+                            yAxisIndex: 1,
+                            data: accuracy,
+                            itemStyle: { color: '#7c9885' }
+                        },
+                        {
+                            name: 'Validation Loss',
+                            type: 'line',
+                            data: valLoss,
+                            itemStyle: { color: '#e53e3e' }
+                        },
+                        {
+                            name: 'Validation Accuracy',
+                            type: 'line',
+                            yAxisIndex: 1,
+                            data: valAccuracy,
+                            itemStyle: { color: '#3182ce' }
+                        }
+                    ]
+                };
+
+                chart.setOption(option);
+                this.charts.trainingHistory = chart;
+            }
+
+            setupCorrelationChart() {
+                const chart = echarts.init(document.getElementById('correlation-chart'));
+                
+                const features = ['Sepal Length', 'Sepal Width', 'Petal Length', 'Petal Width'];
+                const correlationData = [
+                    [0, 0, 1.00], [0, 1, -0.12], [0, 2, 0.87], [0, 3, 0.82],
+                    [1, 0, -0.12], [1, 1, 1.00], [1, 2, -0.43], [1, 3, -0.37],
+                    [2, 0, 0.87], [2, 1, -0.43], [2, 2, 1.00], [2, 3, 0.96],
+                    [3, 0, 0.82], [3, 1, -0.37], [3, 2, 0.96], [3, 3, 1.00]
+                ];
+
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: { color: '#ffffff' },
+                    tooltip: {
+                        position: 'top',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#c17817',
+                        textStyle: { color: '#ffffff' }
+                    },
+                    grid: {
+                        height: '50%',
+                        top: '10%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: features,
+                        splitArea: { show: true },
+                        axisLine: { lineStyle: { color: '#ffffff' } }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: features,
+                        splitArea: { show: true },
+                        axisLine: { lineStyle: { color: '#ffffff' } }
+                    },
+                    visualMap: {
+                        min: -1,
+                        max: 1,
+                        calculable: true,
+                        orient: 'horizontal',
+                        left: 'center',
+                        bottom: '15%',
+                        inRange: {
+                            color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                        },
+                        textStyle: { color: '#ffffff' }
+                    },
+                    series: [{
+                        name: 'Correlation',
+                        type: 'heatmap',
+                        data: correlationData,
+                        label: {
+                            show: true,
+                            formatter: function(params) {
+                                return params.value[2].toFixed(2);
+                            }
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        }
+                    }]
+                };
+
+                chart.setOption(option);
+                this.charts.correlation = chart;
+            }
+
+            setupConfidenceChart() {
+                const chart = echarts.init(document.getElementById('confidence-chart'));
+                
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: { color: '#ffffff' },
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#c17817',
+                        textStyle: { color: '#ffffff' }
+                    },
+                    series: [{
+                        name: 'Confidence',
+                        type: 'pie',
+                        radius: '70%',
+                        data: [
+                            { value: 0.85, name: 'Setosa (85%)', itemStyle: { color: '#c17817' } },
+                            { value: 0.10, name: 'Versicolor (10%)', itemStyle: { color: '#7c9885' } },
+                            { value: 0.05, name: 'Virginica (5%)', itemStyle: { color: '#e53e3e' } }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        label: {
+                            color: '#ffffff'
+                        }
+                    }]
+                };
+
+                chart.setOption(option);
+                this.charts.confidence = chart;
+            }
+
+            setupConfusionMatrix() {
+                const matrix = document.getElementById('confusion-matrix');
+                const data = [
+                    ['', 'Predicted Setosa', 'Predicted Versicolor', 'Predicted Virginica'],
+                    ['Actual Setosa', 10, 0, 0],
+                    ['Actual Versicolor', 0, 9, 1],
+                    ['Actual Virginica', 0, 1, 9]
+                ];
+
+                matrix.innerHTML = '';
+                
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'matrix-cell';
+                        cell.style.height = '60px';
+                        
+                        if (i === 0 || j === 0) {
+                            // Headers
+                            cell.textContent = data[i][j];
+                            cell.style.background = 'rgba(255, 255, 255, 0.1)';
+                            cell.style.fontSize = '10px';
+                            cell.style.fontWeight = 'bold';
+                        } else {
+                            // Data cells
+                            const value = data[i][j];
+                            cell.textContent = value;
+                            
+                            // Color coding
+                            if (i === j) {
+                                // Diagonal (correct predictions)
+                                const intensity = value / 10;
+                                cell.style.background = `rgba(124, 152, 133, ${intensity})`;
+                            } else {
+                                // Off-diagonal (incorrect predictions)
+                                const intensity = value / 10;
+                                cell.style.background = `rgba(229, 62, 62, ${intensity})`;
+                            }
+                        }
+                        
+                        matrix.appendChild(cell);
+                    }
+                }
+            }
+
+            setupFeatureImportance() {
+                const features = [
+                    { name: 'Petal Length', importance: 0.92 },
+                    { name: 'Petal Width', importance: 0.88 },
+                    { name: 'Sepal Length', importance: 0.45 },
+                    { name: 'Sepal Width', importance: 0.23 }
+                ];
+
+                const container = document.getElementById('feature-importance-list');
+                container.innerHTML = features.map(feature => `
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-medium">${feature.name}</span>
+                            <span class="text-sm gradient-text">${(feature.importance * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div class="feature-importance-bar" style="width: ${feature.importance * 100}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            generateROCData() {
+                const data = [];
+                for (let i = 0; i <= 100; i++) {
+                    const fpr = i / 100;
+                    const tpr = Math.pow(fpr, 0.3) + Math.random() * 0.05;
+                    if (tpr <= 1) {
+                        data.push([fpr, tpr]);
+                    }
+                }
+                return data;
+            }
+
+            animateMetrics() {
+                const metrics = [
+                    { id: 'model-accuracy', target: 94.2, suffix: '%' },
+                    { id: 'training-time', target: 2.3, suffix: 's' },
+                    { id: 'f1-score', target: 0.941, suffix: '' }
+                ];
+
+                metrics.forEach(metric => {
+                    anime({
+                        targets: { count: 0 },
+                        count: metric.target,
+                        duration: 2000,
+                        delay: 500,
+                        easing: 'easeOutExpo',
+                        update: function(anim) {
+                            const value = anim.animatables[0].target.count;
+                            document.getElementById(metric.id).textContent = 
+                                (typeof metric.target === 'number' && metric.target < 10 ? 
+                                 value.toFixed(3) : value.toFixed(1)) + metric.suffix;
+                        }
+                    });
+                });
+            }
+
+            switchTab(tabName) {
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Remove active from all buttons
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Show selected tab
+                document.getElementById(tabName + '-tab').classList.add('active');
+                
+                // Add active to clicked button
+                event.target.classList.add('active');
+                
+                this.currentTab = tabName;
+                
+                // Resize charts if needed
+                setTimeout(() => {
+                    Object.values(this.charts).forEach(chart => {
+                        if (chart) chart.resize();
+                    });
+                }, 100);
+            }
+
+            makePrediction() {
+                const inputs = {
+                    sepalLength: parseFloat(document.getElementById('sepal-length').value),
+                    sepalWidth: parseFloat(document.getElementById('sepal-width').value),
+                    petalLength: parseFloat(document.getElementById('petal-length').value),
+                    petalWidth: parseFloat(document.getElementById('petal-width').value)
+                };
+
+                // Validate inputs
+                if (Object.values(inputs).some(val => isNaN(val))) {
+                    this.showNotification('Please fill in all input values', 'error');
+                    return;
+                }
+
+                // Simulate prediction
+                const predictions = this.simulatePrediction(inputs);
+                this.displayPredictionResults(predictions);
+                this.updateConfidenceChart(predictions);
+            }
+
+            simulatePrediction(inputs) {
+                // Simple simulation based on typical iris characteristics
+                let setosaProb = 0.1, versicolorProb = 0.1, virginicaProb = 0.1;
+                
+                if (inputs.petalWidth < 0.8) {
+                    setosaProb = 0.85 + Math.random() * 0.1;
+                    versicolorProb = (1 - setosaProb) * 0.7;
+                    virginicaProb = 1 - setosaProb - versicolorProb;
+                } else if (inputs.petalWidth < 1.8) {
+                    versicolorProb = 0.75 + Math.random() * 0.15;
+                    setosaProb = (1 - versicolorProb) * 0.1;
+                    virginicaProb = 1 - setosaProb - versicolorProb;
+                } else {
+                    virginicaProb = 0.80 + Math.random() * 0.15;
+                    versicolorProb = (1 - virginicaProb) * 0.6;
+                    setosaProb = 1 - virginicaProb - versicolorProb;
+                }
+
+                return [
+                    { class: 'Setosa', probability: Math.max(0, setosaProb) },
+                    { class: 'Versicolor', probability: Math.max(0, versicolorProb) },
+                    { class: 'Virginica', probability: Math.max(0, virginicaProb) }
+                ].sort((a, b) => b.probability - a.probability);
+            }
+
+            displayPredictionResults(predictions) {
+                const container = document.getElementById('prediction-results');
+                const topPrediction = predictions[0];
+
+                container.innerHTML = `
+                    <div class="prediction-result">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🌸</div>
+                            <div class="text-2xl font-bold gradient-text mb-2">${topPrediction.class}</div>
+                            <div class="text-sm text-gray-300">Confidence: ${(topPrediction.probability * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5 class="font-semibold mb-2">All Predictions:</h5>
+                        ${predictions.map(pred => `
+                            <div class="flex justify-between items-center mb-2">
+                                <span>${pred.class}</span>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-20 bg-gray-700 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full" style="width: ${pred.probability * 100}%"></div>
+                                    </div>
+                                    <span class="text-sm w-12 text-right">${(pred.probability * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            updateConfidenceChart(predictions) {
+                if (!this.charts.confidence) return;
+
+                const option = {
+                    series: [{
+                        data: predictions.map(pred => ({
+                            value: pred.probability,
+                            name: `${pred.class} (${(pred.probability * 100).toFixed(0)}%)`
+                        }))
+                    }]
+                };
+
+                this.charts.confidence.setOption(option);
+            }
+
+            exportModel() {
+                this.showNotification('Model export started...', 'info');
+                setTimeout(() => {
+                    this.showNotification('Model exported successfully!', 'success');
+                }, 2000);
+            }
+
+            exportResults() {
+                this.showNotification('Results export started...', 'info');
+                setTimeout(() => {
+                    this.showNotification('Results exported successfully!', 'success');
+                }, 1500);
+            }
+
+            generateReport() {
+                this.showNotification('Generating comprehensive report...', 'info');
+                setTimeout(() => {
+                    this.showNotification('Report generated successfully!', 'success');
+                }, 3000);
+            }
+
+            shareProject() {
+                this.showNotification('Generating shareable link...', 'info');
+                setTimeout(() => {
+                    this.showNotification('Project link copied to clipboard!', 'success');
+                }, 1500);
+            }
+
+            saveToLibrary() {
+                this.showNotification('Saving to community library...', 'info');
+                setTimeout(() => {
+                    this.showNotification('Model saved to library!', 'success');
+                }, 2000);
+            }
+
+            deployModel() {
+                this.showNotification('Preparing cloud deployment...', 'info');
+                setTimeout(() => {
+                    this.showNotification('Model deployed successfully!', 'success');
+                }, 4000);
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-20 right-4 glass-card p-4 z-50 max-w-sm ${
+                    type === 'success' ? 'border-green-500' : 
+                    type === 'error' ? 'border-red-500' : 'border-blue-500'
+                }`;
+                notification.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">
+                            ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+                        </div>
+                        <div class="flex-1">${message}</div>
+                        <button onclick="this.closest('.glass-card').remove()" class="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Global Functions
+        function switchTab(tabName) {
+            window.resultsAnalyzer.switchTab(tabName);
+        }
+
+        function makePrediction() {
+            window.resultsAnalyzer.makePrediction();
+        }
+
+        function exportModel() {
+            window.resultsAnalyzer.exportModel();
+        }
+
+        function exportResults() {
+            window.resultsAnalyzer.exportResults();
+        }
+
+        function generateReport() {
+            window.resultsAnalyzer.generateReport();
+        }
+
+        function shareProject() {
+            window.resultsAnalyzer.shareProject();
+        }
+
+        function saveToLibrary() {
+            window.resultsAnalyzer.saveToLibrary();
+        }
+
+        function deployModel() {
+            window.resultsAnalyzer.deployModel();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            window.resultsAnalyzer = new ResultsAnalyzer();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.resultsAnalyzer && window.resultsAnalyzer.charts) {
+                Object.values(window.resultsAnalyzer.charts).forEach(chart => {
+                    if (chart) chart.resize();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

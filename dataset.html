@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Management - AI Learning Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.4.1/papaparse.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #1a2332;
+            --secondary: #c17817;
+            --tertiary: #7c9885;
+            --neutral: #f8f9fa;
+            --text: #2d3748;
+            --accent: #e53e3e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3748 50%, #1a2332 100%);
+            color: var(--neutral);
+            overflow-x: hidden;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--secondary), var(--tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), #d69e2e);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(193, 120, 23, 0.3);
+        }
+        
+        .upload-zone {
+            border: 2px dashed rgba(193, 120, 23, 0.5);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-zone:hover {
+            border-color: var(--secondary);
+            background: rgba(193, 120, 23, 0.1);
+        }
+        
+        .upload-zone.dragover {
+            border-color: var(--tertiary);
+            background: rgba(124, 152, 133, 0.1);
+        }
+        
+        .data-table {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .data-table th {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .issue-card {
+            background: rgba(229, 62, 62, 0.1);
+            border: 1px solid rgba(229, 62, 62, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .issue-card.warning {
+            background: rgba(193, 120, 23, 0.1);
+            border-color: rgba(193, 120, 23, 0.3);
+        }
+        
+        .issue-card.info {
+            background: rgba(124, 152, 133, 0.1);
+            border-color: rgba(124, 152, 133, 0.3);
+        }
+        
+        .nav-link {
+            color: var(--neutral);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--secondary);
+        }
+        
+        .progress-bar {
+            background: rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            height: 8px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, var(--tertiary), var(--secondary));
+            height: 100%;
+            border-radius: 8px;
+            transition: width 1s ease;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-20 backdrop-filter backdrop-blur-lg border-b border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">Learning Lab</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                    <a href="#dataset" class="nav-link text-orange-400">Datasets</a>
+                    <a href="training.html" class="nav-link">Training</a>
+                    <a href="results.html" class="nav-link">Results</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="btn-primary" onclick="proceedToTraining()">Next: Train Model</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="pt-24 pb-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                    <span class="gradient-text">Dataset Management</span>
+                </h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Upload, analyze, and preprocess your data for machine learning
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- File Upload -->
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-6">Upload Dataset</h2>
+                    
+                    <div class="upload-zone" id="upload-zone">
+                        <div class="text-4xl mb-4">📊</div>
+                        <h3 class="text-xl font-semibold mb-2">Drop your files here</h3>
+                        <p class="text-gray-300 mb-4">or click to browse</p>
+                        <p class="text-sm text-gray-400">Supports CSV, JSON, Excel files up to 10MB</p>
+                        <input type="file" id="file-input" class="hidden" accept=".csv,.json,.xlsx,.xls" multiple>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h3 class="text-lg font-semibold mb-4">Sample Datasets</h3>
+                        <div class="space-y-2">
+                            <button class="w-full text-left p-3 glass-card hover:bg-white hover:bg-opacity-10" onclick="loadSampleDataset('iris')">
+                                <div class="font-semibold">Iris Flower Dataset</div>
+                                <div class="text-sm text-gray-400">150 samples, 4 features, 3 classes</div>
+                            </button>
+                            <button class="w-full text-left p-3 glass-card hover:bg-white hover:bg-opacity-10" onclick="loadSampleDataset('housing')">
+                                <div class="font-semibold">Boston Housing</div>
+                                <div class="text-sm text-gray-400">506 samples, 13 features, regression</div>
+                            </button>
+                            <button class="w-full text-left p-3 glass-card hover:bg-white hover:bg-opacity-10" onclick="loadSampleDataset('titanic')">
+                                <div class="font-semibold">Titanic Survival</div>
+                                <div class="text-sm text-gray-400">891 samples, 12 features, binary classification</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dataset Info -->
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl font-bold mb-6">Dataset Information</h2>
+                    
+                    <div id="dataset-info" class="space-y-4">
+                        <div class="text-center text-gray-400 py-8">
+                            <div class="text-4xl mb-4">📋</div>
+                            <p>Upload a dataset to see detailed information</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Preview -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8" id="data-preview-section" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <div class="glass-card p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Data Preview</h2>
+                    <div class="flex space-x-4">
+                        <button class="btn-primary" onclick="toggleDataView()">Toggle View</button>
+                        <button class="btn-primary" onclick="downloadProcessedData()">Download</button>
+                    </div>
+                </div>
+                
+                <div id="data-table-container" class="overflow-x-auto">
+                    <!-- Data table will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Analysis -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8" id="analysis-section" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl font-bold mb-8 gradient-text">Data Analysis</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Issues Detection -->
+                <div class="glass-card p-8">
+                    <h3 class="text-xl font-bold mb-6">Data Quality Issues</h3>
+                    <div id="issues-container">
+                        <!-- Issues will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Feature Statistics -->
+                <div class="glass-card p-8">
+                    <h3 class="text-xl font-bold mb-6">Feature Statistics</h3>
+                    <div id="statistics-container">
+                        <!-- Statistics will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Cleaning -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8" id="cleaning-section" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl font-bold mb-8 gradient-text">Data Cleaning & Preprocessing</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Missing Values -->
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-bold mb-4">Missing Values</h3>
+                    <div id="missing-values-options">
+                        <label class="block mb-2">
+                            <input type="radio" name="missing-values" value="drop" class="mr-2"> Drop rows
+                        </label>
+                        <label class="block mb-2">
+                            <input type="radio" name="missing-values" value="mean" class="mr-2"> Fill with mean
+                        </label>
+                        <label class="block mb-2">
+                            <input type="radio" name="missing-values" value="median" class="mr-2"> Fill with median
+                        </label>
+                        <label class="block mb-2">
+                            <input type="radio" name="missing-values" value="mode" class="mr-2"> Fill with mode
+                        </label>
+                    </div>
+                    <button class="btn-primary mt-4 w-full" onclick="applyMissingValuesFix()">Apply</button>
+                </div>
+                
+                <!-- Outliers -->
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-bold mb-4">Outliers</h3>
+                    <div id="outliers-options">
+                        <label class="block mb-2">
+                            <input type="checkbox" id="remove-outliers" class="mr-2"> Remove outliers
+                        </label>
+                        <div class="mt-4">
+                            <label class="block text-sm mb-2">Method:</label>
+                            <select id="outlier-method" class="w-full p-2 rounded bg-white bg-opacity-10 border border-white border-opacity-20">
+                                <option value="iqr">IQR Method</option>
+                                <option value="zscore">Z-Score</option>
+                                <option value="modified-zscore">Modified Z-Score</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-primary mt-4 w-full" onclick="applyOutliersFix()">Apply</button>
+                </div>
+                
+                <!-- Normalization -->
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-bold mb-4">Normalization</h3>
+                    <div id="normalization-options">
+                        <label class="block mb-2">
+                            <input type="radio" name="normalization" value="minmax" class="mr-2"> Min-Max Scaling
+                        </label>
+                        <label class="block mb-2">
+                            <input type="radio" name="normalization" value="standard" class="mr-2"> Standardization
+                        </label>
+                        <label class="block mb-2">
+                            <input type="radio" name="normalization" value="robust" class="mr-2"> Robust Scaling
+                        </label>
+                    </div>
+                    <button class="btn-primary mt-4 w-full" onclick="applyNormalization()">Apply</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Engineering -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8" id="feature-engineering-section" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <div class="glass-card p-8">
+                <h2 class="text-2xl font-bold mb-6 gradient-text">Feature Engineering</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="feature-card">
+                        <h3 class="font-semibold mb-3">Feature Selection</h3>
+                        <p class="text-sm text-gray-300 mb-4">Select the most important features for your model</p>
+                        <button class="btn-primary w-full" onclick="openFeatureSelection()">Select Features</button>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3 class="font-semibold mb-3">Create Features</h3>
+                        <p class="text-sm text-gray-300 mb-4">Generate new features from existing ones</p>
+                        <button class="btn-primary w-full" onclick="openFeatureCreator()">Create Features</button>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3 class="font-semibold mb-3">Encode Categories</h3>
+                        <p class="text-sm text-gray-300 mb-4">Convert categorical variables to numerical</p>
+                        <button class="btn-primary w-full" onclick="openEncoder()">Encode Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">AI</span>
+                </div>
+                <span class="text-xl font-bold gradient-text">Learning Lab</span>
+            </div>
+            <p class="text-gray-400">
+                © 2025 AI Learning Lab. Empowering the next generation of machine learning practitioners.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Dataset Management Class
+        class DatasetManager {
+            constructor() {
+                this.currentDataset = null;
+                this.processedDataset = null;
+                this.issues = [];
+                this.init();
+            }
+
+            init() {
+                this.setupUploadZone();
+                this.setupFileInput();
+                this.setupSampleDatasets();
+            }
+
+            setupUploadZone() {
+                const uploadZone = document.getElementById('upload-zone');
+                const fileInput = document.getElementById('file-input');
+
+                uploadZone.addEventListener('click', () => fileInput.click());
+                
+                uploadZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.add('dragover');
+                });
+                
+                uploadZone.addEventListener('dragleave', () => {
+                    uploadZone.classList.remove('dragover');
+                });
+                
+                uploadZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadZone.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.handleFileUpload(files[0]);
+                    }
+                });
+            }
+
+            setupFileInput() {
+                const fileInput = document.getElementById('file-input');
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.handleFileUpload(e.target.files[0]);
+                    }
+                });
+            }
+
+            handleFileUpload(file) {
+                if (!file.name.match(/\.(csv|json|xlsx|xls)$/)) {
+                    this.showNotification('Please upload a valid CSV, JSON, or Excel file', 'error');
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    this.showNotification('File size must be less than 10MB', 'error');
+                    return;
+                }
+
+                this.showNotification('Processing file...', 'info');
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        let data;
+                        if (file.name.endsWith('.csv')) {
+                            data = this.parseCSV(e.target.result);
+                        } else if (file.name.endsWith('.json')) {
+                            data = JSON.parse(e.target.result);
+                        } else {
+                            this.showNotification('Excel parsing not implemented in demo', 'error');
+                            return;
+                        }
+                        
+                        this.currentDataset = {
+                            name: file.name,
+                            data: data,
+                            size: file.size,
+                            type: file.name.split('.').pop()
+                        };
+                        
+                        this.processDataset();
+                        this.showNotification('File uploaded successfully!', 'success');
+                    } catch (error) {
+                        this.showNotification('Error parsing file: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            }
+
+            parseCSV(csvText) {
+                const lines = csvText.split('\n').filter(line => line.trim());
+                const headers = lines[0].split(',').map(h => h.trim());
+                const data = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] || '';
+                    });
+                    data.push(row);
+                }
+                
+                return data;
+            }
+
+            loadSampleDataset(name) {
+                let sampleData;
+                
+                switch(name) {
+                    case 'iris':
+                        sampleData = this.generateIrisData();
+                        break;
+                    case 'housing':
+                        sampleData = this.generateHousingData();
+                        break;
+                    case 'titanic':
+                        sampleData = this.generateTitanicData();
+                        break;
+                    default:
+                        return;
+                }
+                
+                this.currentDataset = {
+                    name: `${name}.csv`,
+                    data: sampleData,
+                    size: JSON.stringify(sampleData).length,
+                    type: 'csv'
+                };
+                
+                this.processDataset();
+                this.showNotification(`Loaded ${name} dataset!`, 'success');
+            }
+
+            generateIrisData() {
+                const species = ['setosa', 'versicolor', 'virginica'];
+                const data = [];
+                
+                for (let i = 0; i < 150; i++) {
+                    data.push({
+                        sepal_length: (4 + Math.random() * 4).toFixed(1),
+                        sepal_width: (2 + Math.random() * 2.5).toFixed(1),
+                        petal_length: (1 + Math.random() * 6).toFixed(1),
+                        petal_width: (0.1 + Math.random() * 2.4).toFixed(1),
+                        species: species[Math.floor(Math.random() * species.length)]
+                    });
+                }
+                
+                return data;
+            }
+
+            generateHousingData() {
+                const data = [];
+                
+                for (let i = 0; i < 506; i++) {
+                    data.push({
+                        CRIM: (Math.random() * 100).toFixed(2),
+                        ZN: (Math.random() * 100).toFixed(0),
+                        INDUS: (Math.random() * 30).toFixed(1),
+                        CHAS: Math.random() > 0.5 ? '1' : '0',
+                        NOX: (0.3 + Math.random() * 0.3).toFixed(3),
+                        RM: (3 + Math.random() * 6).toFixed(1),
+                        AGE: (Math.random() * 100).toFixed(0),
+                        DIS: (Math.random() * 10).toFixed(2),
+                        RAD: (1 + Math.floor(Math.random() * 24)).toString(),
+                        TAX: (100 + Math.random() * 600).toFixed(0),
+                        PTRATIO: (10 + Math.random() * 20).toFixed(1),
+                        B: (Math.random() * 400).toFixed(2),
+                        LSTAT: (Math.random() * 40).toFixed(1),
+                        MEDV: (5 + Math.random() * 45).toFixed(1)
+                    });
+                }
+                
+                return data;
+            }
+
+            generateTitanicData() {
+                const data = [];
+                
+                for (let i = 0; i < 891; i++) {
+                    data.push({
+                        PassengerId: (i + 1).toString(),
+                        Survived: Math.random() > 0.62 ? '1' : '0',
+                        Pclass: (1 + Math.floor(Math.random() * 3)).toString(),
+                        Name: `Passenger ${i + 1}`,
+                        Sex: Math.random() > 0.65 ? 'male' : 'female',
+                        Age: (0.5 + Math.random() * 80).toFixed(1),
+                        SibSp: Math.floor(Math.random() * 5).toString(),
+                        Parch: Math.floor(Math.random() * 3).toString(),
+                        Ticket: `Ticket${Math.floor(Math.random() * 10000)}`,
+                        Fare: (5 + Math.random() * 500).toFixed(2),
+                        Cabin: Math.random() > 0.8 ? `C${Math.floor(Math.random() * 100)}` : '',
+                        Embarked: ['S', 'C', 'Q'][Math.floor(Math.random() * 3)]
+                    });
+                }
+                
+                return data;
+            }
+
+            processDataset() {
+                if (!this.currentDataset) return;
+                
+                this.processedDataset = { ...this.currentDataset };
+                this.analyzeData();
+                this.renderDatasetInfo();
+                this.renderDataPreview();
+                this.detectIssues();
+                this.showAnalysis();
+            }
+
+            analyzeData() {
+                const data = this.currentDataset.data;
+                if (!data || data.length === 0) return;
+                
+                const columns = Object.keys(data[0]);
+                const analysis = {
+                    rows: data.length,
+                    columns: columns.length,
+                    missingValues: {},
+                    dataTypes: {},
+                    statistics: {}
+                };
+                
+                columns.forEach(col => {
+                    const values = data.map(row => row[col]).filter(val => val !== '' && val != null);
+                    const missing = data.length - values.length;
+                    
+                    analysis.missingValues[col] = missing;
+                    
+                    // Detect data type
+                    if (values.every(val => !isNaN(val) && val !== '')) {
+                        analysis.dataTypes[col] = 'numeric';
+                        const nums = values.map(val => parseFloat(val));
+                        analysis.statistics[col] = {
+                            mean: (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2),
+                            min: Math.min(...nums).toFixed(2),
+                            max: Math.max(...nums).toFixed(2),
+                            std: Math.sqrt(nums.reduce((a, b) => a + Math.pow(b - nums.reduce((c, d) => c + d, 0) / nums.length, 2), 0) / nums.length).toFixed(2)
+                        };
+                    } else {
+                        analysis.dataTypes[col] = 'categorical';
+                        const unique = [...new Set(values)];
+                        analysis.statistics[col] = {
+                            unique: unique.length,
+                            top: unique.slice(0, 3).join(', ')
+                        };
+                    }
+                });
+                
+                this.analysis = analysis;
+            }
+
+            renderDatasetInfo() {
+                const container = document.getElementById('dataset-info');
+                if (!container || !this.analysis) return;
+                
+                const totalMissing = Object.values(this.analysis.missingValues).reduce((a, b) => a + b, 0);
+                const missingPercentage = ((totalMissing / (this.analysis.rows * this.analysis.columns)) * 100).toFixed(1);
+                
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Dataset Name:</span>
+                            <span class="font-semibold">${this.currentDataset.name}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Rows:</span>
+                            <span class="font-semibold">${this.analysis.rows.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Columns:</span>
+                            <span class="font-semibold">${this.analysis.columns}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Missing Values:</span>
+                            <span class="font-semibold ${totalMissing > 0 ? 'text-red-400' : 'text-green-400'}">
+                                ${totalMissing} (${missingPercentage}%)
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Data Types:</span>
+                            <span class="font-semibold">
+                                ${Object.values(this.analysis.dataTypes).filter(t => t === 'numeric').length} numeric, 
+                                ${Object.values(this.analysis.dataTypes).filter(t => t === 'categorical').length} categorical
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderDataPreview() {
+                if (!this.currentDataset || !this.currentDataset.data) return;
+                
+                const section = document.getElementById('data-preview-section');
+                const container = document.getElementById('data-table-container');
+                
+                const data = this.currentDataset.data;
+                const columns = Object.keys(data[0]);
+                
+                let tableHTML = `
+                    <table class="data-table w-full">
+                        <thead>
+                            <tr>
+                                ${columns.map(col => `<th>${col}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                // Show first 20 rows
+                data.slice(0, 20).forEach(row => {
+                    tableHTML += `
+                        <tr>
+                            ${columns.map(col => `<td>${row[col] || ''}</td>`).join('')}
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `
+                        </tbody>
+                    </table>
+                    <div class="mt-4 text-gray-400 text-sm">
+                        Showing first 20 rows of ${data.length.toLocaleString()} total rows
+                    </div>
+                `;
+                
+                container.innerHTML = tableHTML;
+                section.style.display = 'block';
+            }
+
+            detectIssues() {
+                if (!this.analysis) return;
+                
+                this.issues = [];
+                
+                // Check for missing values
+                Object.entries(this.analysis.missingValues).forEach(([col, count]) => {
+                    if (count > 0) {
+                        const percentage = (count / this.analysis.rows * 100).toFixed(1);
+                        this.issues.push({
+                            type: 'missing-values',
+                            severity: percentage > 20 ? 'error' : percentage > 5 ? 'warning' : 'info',
+                            column: col,
+                            message: `${count} missing values in ${col} (${percentage}%)`,
+                            suggestion: percentage > 20 ? 'Consider dropping this column' : 'Fill with mean/median'
+                        });
+                    }
+                });
+                
+                // Check for potential outliers in numeric columns
+                Object.entries(this.analysis.dataTypes).forEach(([col, type]) => {
+                    if (type === 'numeric') {
+                        const stats = this.analysis.statistics[col];
+                        const range = parseFloat(stats.max) - parseFloat(stats.min);
+                        if (range > parseFloat(stats.mean) * 4) {
+                            this.issues.push({
+                                type: 'outliers',
+                                severity: 'warning',
+                                column: col,
+                                message: `Potential outliers detected in ${col}`,
+                                suggestion: 'Consider outlier removal or transformation'
+                            });
+                        }
+                    }
+                });
+                
+                // Check for high cardinality in categorical features
+                Object.entries(this.analysis.dataTypes).forEach(([col, type]) => {
+                    if (type === 'categorical') {
+                        const unique = this.analysis.statistics[col].unique;
+                        if (unique > this.analysis.rows * 0.8) {
+                            this.issues.push({
+                                type: 'high-cardinality',
+                                severity: 'warning',
+                                column: col,
+                                message: `High cardinality in ${col}: ${unique} unique values`,
+                                suggestion: 'Consider feature encoding or grouping'
+                            });
+                        }
+                    }
+                });
+                
+                this.renderIssues();
+            }
+
+            renderIssues() {
+                const container = document.getElementById('issues-container');
+                if (!container) return;
+                
+                if (this.issues.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-green-400 py-8">
+                            <div class="text-4xl mb-4">✅</div>
+                            <p>No data quality issues detected!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = this.issues.map(issue => {
+                    const icon = issue.severity === 'error' ? '❌' : issue.severity === 'warning' ? '⚠️' : 'ℹ️';
+                    const className = issue.severity === 'error' ? 'issue-card' : 
+                                     issue.severity === 'warning' ? 'issue-card warning' : 'issue-card info';
+                    
+                    return `
+                        <div class="${className}">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-xl">${icon}</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold">${issue.message}</div>
+                                    <div class="text-sm text-gray-300 mt-1">${issue.suggestion}</div>
+                                    <button class="btn-primary text-sm mt-2 px-3 py-1" onclick="fixIssue('${issue.type}', '${issue.column}')">
+                                        Fix Issue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            showAnalysis() {
+                document.getElementById('analysis-section').style.display = 'block';
+                document.getElementById('cleaning-section').style.display = 'block';
+                document.getElementById('feature-engineering-section').style.display = 'block';
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-20 right-4 glass-card p-4 z-50 max-w-sm ${
+                    type === 'success' ? 'border-green-500' : 
+                    type === 'error' ? 'border-red-500' : 'border-blue-500'
+                }`;
+                notification.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">
+                            ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+                        </div>
+                        <div class="flex-1">${message}</div>
+                        <button onclick="this.closest('.glass-card').remove()" class="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Global Functions
+        function loadSampleDataset(name) {
+            window.datasetManager.loadSampleDataset(name);
+        }
+
+        function toggleDataView() {
+            // Toggle between table and card view
+            window.datasetManager.showNotification('View toggled!', 'info');
+        }
+
+        function downloadProcessedData() {
+            window.datasetManager.showNotification('Download feature coming soon!', 'info');
+        }
+
+        function fixIssue(type, column) {
+            window.datasetManager.showNotification(`Fixing ${type} issue for ${column}...`, 'info');
+        }
+
+        function applyMissingValuesFix() {
+            const method = document.querySelector('input[name="missing-values"]:checked')?.value;
+            if (method) {
+                window.datasetManager.showNotification(`Applied ${method} fix for missing values`, 'success');
+            } else {
+                window.datasetManager.showNotification('Please select a method', 'error');
+            }
+        }
+
+        function applyOutliersFix() {
+            const remove = document.getElementById('remove-outliers').checked;
+            const method = document.getElementById('outlier-method').value;
+            window.datasetManager.showNotification(`Applied ${method} outlier removal: ${remove}`, 'success');
+        }
+
+        function applyNormalization() {
+            const method = document.querySelector('input[name="normalization"]:checked')?.value;
+            if (method) {
+                window.datasetManager.showNotification(`Applied ${method} normalization`, 'success');
+            } else {
+                window.datasetManager.showNotification('Please select a normalization method', 'error');
+            }
+        }
+
+        function openFeatureSelection() {
+            window.datasetManager.showNotification('Feature selection tool opening...', 'info');
+        }
+
+        function openFeatureCreator() {
+            window.datasetManager.showNotification('Feature creator tool opening...', 'info');
+        }
+
+        function openEncoder() {
+            window.datasetManager.showNotification('Encoder tool opening...', 'info');
+        }
+
+        function proceedToTraining() {
+            if (window.datasetManager.currentDataset) {
+                window.location.href = 'training.html';
+            } else {
+                window.datasetManager.showNotification('Please upload a dataset first', 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            window.datasetManager = new DatasetManager();
+        });
+    </script>
+</body>
+</html>

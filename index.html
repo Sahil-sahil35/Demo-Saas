@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Lab - Interactive Machine Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+    <script src="https://unpkg.com/splitting@1.0.6/dist/splitting.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/splitting@1.0.6/dist/splitting.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #1a2332;
+            --secondary: #c17817;
+            --tertiary: #7c9885;
+            --neutral: #f8f9fa;
+            --text: #2d3748;
+            --accent: #e53e3e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3748 50%, #1a2332 100%);
+            color: var(--neutral);
+            overflow-x: hidden;
+        }
+        
+        .hero-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--secondary), var(--tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), #d69e2e);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(193, 120, 23, 0.3);
+        }
+        
+        .progress-bar {
+            background: rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            height: 8px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, var(--tertiary), var(--secondary));
+            height: 100%;
+            border-radius: 8px;
+            transition: width 1s ease;
+        }
+        
+        .neural-node {
+            width: 12px;
+            height: 12px;
+            background: var(--secondary);
+            border-radius: 50%;
+            position: absolute;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .data-flow {
+            position: absolute;
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(180deg, transparent, var(--tertiary), transparent);
+            animation: flow 3s infinite;
+        }
+        
+        @keyframes flow {
+            0% { opacity: 0; transform: translateY(-20px); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+        
+        .achievement-badge {
+            background: linear-gradient(135deg, var(--tertiary), #68d391);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .typing-cursor {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .project-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .project-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+            border-color: var(--secondary);
+        }
+        
+        .metric-card {
+            background: rgba(124, 152, 133, 0.1);
+            border: 1px solid rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .nav-link {
+            color: var(--neutral);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation Container -->
+    <div id="hero-bg" class="hero-bg"></div>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-20 backdrop-filter backdrop-blur-lg border-b border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">Learning Lab</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#dashboard" class="nav-link">Dashboard</a>
+                    <a href="dataset.html" class="nav-link">Datasets</a>
+                    <a href="training.html" class="nav-link">Training</a>
+                    <a href="results.html" class="nav-link">Results</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="btn-primary" onclick="showAuthModal()">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                    <span class="gradient-text" id="hero-text">Master Machine Learning</span>
+                    <span class="typing-cursor">|</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                    Build, train, and deploy machine learning models entirely in your browser. 
+                    No setup required. No servers needed. Just pure learning.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="btn-primary text-lg px-8 py-4" onclick="startNewProject()">
+                        Start Learning Now
+                    </button>
+                    <button class="glass-card text-lg px-8 py-4" onclick="showTutorial()">
+                        Watch Demo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 reveal">
+                <div class="metric-card">
+                    <div class="text-3xl font-bold gradient-text mb-2" id="projects-count">0</div>
+                    <div class="text-gray-300">Projects Created</div>
+                </div>
+                <div class="metric-card">
+                    <div class="text-3xl font-bold gradient-text mb-2" id="models-trained">0</div>
+                    <div class="text-gray-300">Models Trained</div>
+                </div>
+                <div class="metric-card">
+                    <div class="text-3xl font-bold gradient-text mb-2" id="datasets-processed">0</div>
+                    <div class="text-gray-300">Datasets Processed</div>
+                </div>
+                <div class="metric-card">
+                    <div class="text-3xl font-bold gradient-text mb-2" id="learning-hours">0</div>
+                    <div class="text-gray-300">Hours Learned</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Grid -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-12 reveal">
+                <h2 class="text-3xl font-bold gradient-text">Your Projects</h2>
+                <button class="btn-primary" onclick="createNewProject()">
+                    + New Project
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid">
+                <!-- Project cards will be dynamically generated -->
+            </div>
+            
+            <div class="text-center mt-12 reveal">
+                <button class="glass-card px-8 py-4" onclick="loadMoreProjects()">
+                    Load More Projects
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Learning Progress -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold gradient-text mb-12 text-center reveal">Learning Progress</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="glass-card p-8 reveal">
+                    <h3 class="text-xl font-semibold mb-6">ML Fundamentals</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span>Data Preprocessing</span>
+                                <span>85%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span>Model Selection</span>
+                                <span>72%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 72%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span>Training & Evaluation</span>
+                                <span>68%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 68%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span>Deep Learning</span>
+                                <span>45%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-8 reveal">
+                    <h3 class="text-xl font-semibold mb-6">Recent Achievements</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="achievement-badge">🏆</div>
+                            <div>
+                                <div class="font-semibold">First Model Trained</div>
+                                <div class="text-sm text-gray-400">Completed your first successful model training</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="achievement-badge">📊</div>
+                            <div>
+                                <div class="font-semibold">Data Detective</div>
+                                <div class="text-sm text-gray-400">Identified and fixed 10 data quality issues</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="achievement-badge">🧠</div>
+                            <div>
+                                <div class="font-semibold">Neural Network Builder</div>
+                                <div class="text-sm text-gray-400">Created your first custom neural network</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="achievement-badge">⚡</div>
+                            <div>
+                                <div class="font-semibold">Speed Learner</div>
+                                <div class="text-sm text-gray-400">Completed 5 projects in one week</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold gradient-text mb-12 text-center reveal">Quick Start</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 text-center cursor-pointer reveal" onclick="window.location.href='dataset.html'">
+                    <div class="text-4xl mb-4">📊</div>
+                    <h3 class="text-xl font-semibold mb-4">Upload Dataset</h3>
+                    <p class="text-gray-300 mb-6">Start by uploading your data. We'll help you clean and prepare it for training.</p>
+                    <button class="btn-primary">Upload Data</button>
+                </div>
+                
+                <div class="glass-card p-8 text-center cursor-pointer reveal" onclick="window.location.href='training.html'">
+                    <div class="text-4xl mb-4">🤖</div>
+                    <h3 class="text-xl font-semibold mb-4">Train Model</h3>
+                    <p class="text-gray-300 mb-6">Choose from various algorithms and watch your model learn in real-time.</p>
+                    <button class="btn-primary">Start Training</button>
+                </div>
+                
+                <div class="glass-card p-8 text-center cursor-pointer reveal" onclick="showTutorial()">
+                    <div class="text-4xl mb-4">🎓</div>
+                    <h3 class="text-xl font-semibold mb-4">Interactive Tutorial</h3>
+                    <p class="text-gray-300 mb-6">New to ML? Our guided tutorial will teach you the fundamentals.</p>
+                    <button class="btn-primary">Start Tutorial</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">AI</span>
+                </div>
+                <span class="text-xl font-bold gradient-text">Learning Lab</span>
+            </div>
+            <p class="text-gray-400">
+                © 2025 AI Learning Lab. Empowering the next generation of machine learning practitioners.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="glass-card p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold mb-6 text-center">Welcome Back</h3>
+            <form id="auth-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" class="w-full p-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white" placeholder="Enter your email">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Password</label>
+                    <input type="password" class="w-full p-3 rounded-lg bg-white bg-opacity-10 border border-white border-opacity-20 text-white" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="w-full btn-primary">Sign In</button>
+            </form>
+            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

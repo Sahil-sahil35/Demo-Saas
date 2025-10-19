@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Training - AI Learning Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.15.0/tf.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #1a2332;
+            --secondary: #c17817;
+            --tertiary: #7c9885;
+            --neutral: #f8f9fa;
+            --text: #2d3748;
+            --accent: #e53e3e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3748 50%, #1a2332 100%);
+            color: var(--neutral);
+            overflow-x: hidden;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--secondary), var(--tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), #d69e2e);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(193, 120, 23, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .model-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .model-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+            border-color: var(--secondary);
+        }
+        
+        .model-card.selected {
+            border-color: var(--secondary);
+            background: rgba(193, 120, 23, 0.1);
+        }
+        
+        .nav-link {
+            color: var(--neutral);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--secondary);
+        }
+        
+        .progress-bar {
+            background: rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            height: 8px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, var(--tertiary), var(--secondary));
+            height: 100%;
+            border-radius: 8px;
+            transition: width 1s ease;
+        }
+        
+        .training-controls {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .metric-display {
+            background: rgba(124, 152, 133, 0.1);
+            border: 1px solid rgba(124, 152, 133, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .slider-container {
+            margin: 16px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary);
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .architecture-builder {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 300px;
+        }
+        
+        .layer-node {
+            background: var(--secondary);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 8px;
+            display: inline-block;
+            cursor: move;
+            transition: all 0.3s ease;
+        }
+        
+        .layer-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(193, 120, 23, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-20 backdrop-filter backdrop-blur-lg border-b border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">Learning Lab</span>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="index.html" class="nav-link">Dashboard</a>
+                    <a href="dataset.html" class="nav-link">Datasets</a>
+                    <a href="#training" class="nav-link text-orange-400">Training</a>
+                    <a href="results.html" class="nav-link">Results</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="btn-primary" onclick="proceedToResults()">Next: View Results</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="pt-24 pb-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                    <span class="gradient-text">Model Training</span>
+                </h1>
+                <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                    Choose your algorithm, configure parameters, and watch your model learn
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Selection -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl font-bold mb-8 gradient-text">Select Model Type</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="model-grid">
+                <!-- Model cards will be generated here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Configuration -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8" id="configuration-section" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Parameters -->
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-6">Model Parameters</h3>
+                    <div id="parameters-container">
+                        <!-- Parameters will be populated based on selected model -->
+                    </div>
+                    <div class="mt-6">
+                        <button class="btn-primary" onclick="startTraining()">Start Training</button>
+                        <button class="btn-secondary ml-4" onclick="resetConfiguration()">Reset</button>
+                    </div>
+                </div>
+                
+                <!-- Architecture Builder (for Neural Networks) -->
+                <div class="glass-card p-8" id="architecture-section" style="display: none;">
+                    <h3 class="text-2xl font-bold mb-6">Network Architecture</h3>
+                    <div class="architecture-builder" id="architecture-builder">
+                        <div class="text-center text-gray-400 py-8">
+                            <div class="text-4xl mb-4">🏗️</div>
+                            <p>Drag layers to build your neural network</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex flex-wrap">
+                            <div class="layer-node" draggable="true" data-layer="dense">Dense Layer</div>
+                            <div class="layer-node" draggable="true" data-layer="dropout">Dropout</div>
+                            <div class="layer-node" draggable="true" data-layer="activation">Activation</div>
+                            <div class="layer-node" draggable="true" data-layer="conv2d">Conv2D</div>
+                            <div class="layer-node" draggable="true" data-layer="pooling">Pooling</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Training Dashboard -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8" id="training-section" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl font-bold mb-8 gradient-text">Training Progress</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Training Controls -->
+                <div class="training-controls">
+                    <h3 class="text-xl font-bold mb-4">Training Controls</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Status</label>
+                            <div class="flex items-center space-x-2">
+                                <div id="training-status" class="text-green-400">Ready</div>
+                                <div id="training-progress" class="ml-auto text-sm text-gray-400">0%</div>
+                            </div>
+                            <div class="progress-bar mt-2">
+                                <div id="training-progress-bar" class="progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button id="play-pause-btn" class="btn-primary" onclick="toggleTraining()">
+                                ▶️ Start
+                            </button>
+                            <button class="btn-secondary" onclick="stopTraining()">⏹️ Stop</button>
+                            <button class="btn-secondary" onclick="resetTraining()">🔄 Reset</button>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Training Speed</label>
+                            <input type="range" class="slider" id="speed-slider" min="1" max="10" value="5">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Current Epoch</label>
+                            <div id="current-epoch" class="text-2xl font-bold gradient-text">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Real-time Metrics -->
+                <div class="glass-card p-6">
+                    <h3 class="text-xl font-bold mb-4">Training Metrics</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="metric-display">
+                            <div class="text-sm text-gray-400">Loss</div>
+                            <div id="loss-metric" class="text-2xl font-bold gradient-text">0.000</div>
+                        </div>
+                        
+                        <div class="metric-display">
+                            <div class="text-sm text-gray-400">Accuracy</div>
+                            <div id="accuracy-metric" class="text-2xl font-bold gradient-text">0.00%</div>
+                        </div>
+                        
+                        <div class="metric-display">
+                            <div class="text-sm text-gray-400">Validation Loss</div>
+                            <div id="val-loss-metric" class="text-2xl font-bold gradient-text">0.000</div>
+                        </div>
+                        
+                        <div class="metric-display">
+                            <div class="text-sm text-gray-400">Validation Accuracy</div>
+                            <div id="val-accuracy-metric" class="text-2xl font-bold gradient-text">0.00%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Training Chart -->
+                <div class="glass-card p-6">
+                    <h3 class="text-xl font-bold mb-4">Training Curves</h3>
+                    <div id="training-chart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Comparison -->
+    <section class="py-8 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-2xl font-bold mb-8 gradient-text">Model Comparison</h2>
+            
+            <div class="glass-card p-8">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-white border-opacity-10">
+                                <th class="text-left py-3 px-4">Model</th>
+                                <th class="text-left py-3 px-4">Algorithm</th>
+                                <th class="text-left py-3 px-4">Accuracy</th>
+                                <th class="text-left py-3 px-4">Training Time</th>
+                                <th class="text-left py-3 px-4">Status</th>
+                                <th class="text-left py-3 px-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="model-comparison-table">
+                            <!-- Model comparison data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 sm:px-6 lg:px-8 border-t border-white border-opacity-10">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">AI</span>
+                </div>
+                <span class="text-xl font-bold gradient-text">Learning Lab</span>
+            </div>
+            <p class="text-gray-400">
+                © 2025 AI Learning Lab. Empowering the next generation of machine learning practitioners.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Model Training Class
+        class ModelTrainer {
+            constructor() {
+                this.selectedModel = null;
+                this.trainingInProgress = false;
+                this.currentEpoch = 0;
+                this.maxEpochs = 100;
+                this.trainingData = [];
+                this.chart = null;
+                this.models = this.getModelTemplates();
+                this.init();
+            }
+
+            init() {
+                this.renderModelGrid();
+                this.setupChart();
+                this.setupDragAndDrop();
+                this.loadComparisonData();
+            }
+
+            getModelTemplates() {
+                return [
+                    {
+                        id: 'random-forest',
+                        name: 'Random Forest',
+                        type: 'Classification',
+                        description: 'Ensemble learning method using multiple decision trees',
+                        icon: '🌲',
+                        parameters: [
+                            { name: 'n_estimators', type: 'range', min: 10, max: 200, default: 100, label: 'Number of Trees' },
+                            { name: 'max_depth', type: 'range', min: 3, max: 20, default: 10, label: 'Max Depth' },
+                            { name: 'min_samples_split', type: 'range', min: 2, max: 20, default: 2, label: 'Min Samples Split' }
+                        ]
+                    },
+                    {
+                        id: 'linear-regression',
+                        name: 'Linear Regression',
+                        type: 'Regression',
+                        description: 'Simple linear relationship between features and target',
+                        icon: '📈',
+                        parameters: [
+                            { name: 'fit_intercept', type: 'checkbox', default: true, label: 'Fit Intercept' },
+                            { name: 'normalize', type: 'checkbox', default: false, label: 'Normalize' }
+                        ]
+                    },
+                    {
+                        id: 'logistic-regression',
+                        name: 'Logistic Regression',
+                        type: 'Classification',
+                        description: 'Linear model for binary or multiclass classification',
+                        icon: '📊',
+                        parameters: [
+                            { name: 'C', type: 'range', min: 0.1, max: 10, default: 1, step: 0.1, label: 'Regularization Strength' },
+                            { name: 'max_iter', type: 'range', min: 100, max: 1000, default: 100, label: 'Max Iterations' }
+                        ]
+                    },
+                    {
+                        id: 'svm',
+                        name: 'Support Vector Machine',
+                        type: 'Classification',
+                        description: 'Finds optimal boundary between different classes',
+                        icon: '🎯',
+                        parameters: [
+                            { name: 'C', type: 'range', min: 0.1, max: 10, default: 1, step: 0.1, label: 'Regularization' },
+                            { name: 'kernel', type: 'select', options: ['linear', 'rbf', 'poly'], default: 'rbf', label: 'Kernel' }
+                        ]
+                    },
+                    {
+                        id: 'neural-network',
+                        name: 'Neural Network',
+                        type: 'Deep Learning',
+                        description: 'Multi-layer perceptron for complex patterns',
+                        icon: '🧠',
+                        parameters: [
+                            { name: 'hidden_layer_sizes', type: 'text', default: '100,50', label: 'Hidden Layers' },
+                            { name: 'activation', type: 'select', options: ['relu', 'tanh', 'logistic'], default: 'relu', label: 'Activation' },
+                            { name: 'learning_rate', type: 'range', min: 0.001, max: 0.1, default: 0.001, step: 0.001, label: 'Learning Rate' }
+                        ],
+                        hasArchitecture: true
+                    },
+                    {
+                        id: 'k-means',
+                        name: 'K-Means Clustering',
+                        type: 'Clustering',
+                        description: 'Groups similar data points together',
+                        icon: '🔍',
+                        parameters: [
+                            { name: 'n_clusters', type: 'range', min: 2, max: 10, default: 3, label: 'Number of Clusters' },
+                            { name: 'max_iter', type: 'range', min: 100, max: 1000, default: 300, label: 'Max Iterations' }
+                        ]
+                    }
+                ];
+            }
+
+            renderModelGrid() {
+                const grid = document.getElementById('model-grid');
+                if (!grid) return;
+
+                grid.innerHTML = this.models.map(model => `
+                    <div class="model-card" onclick="selectModel('${model.id}')">
+                        <div class="text-center mb-4">
+                            <div class="text-4xl mb-2">${model.icon}</div>
+                            <h3 class="text-xl font-bold">${model.name}</h3>
+                            <p class="text-sm text-gray-400">${model.type}</p>
+                        </div>
+                        <p class="text-gray-300 text-sm mb-4">${model.description}</p>
+                        <div class="text-center">
+                            <span class="text-xs bg-gray-700 px-2 py-1 rounded">
+                                ${model.parameters.length} parameters
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            selectModel(modelId) {
+                // Remove previous selection
+                document.querySelectorAll('.model-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+
+                // Add selection to clicked model
+                event.target.closest('.model-card').classList.add('selected');
+
+                this.selectedModel = this.models.find(m => m.id === modelId);
+                this.showConfiguration();
+            }
+
+            showConfiguration() {
+                if (!this.selectedModel) return;
+
+                const section = document.getElementById('configuration-section');
+                const container = document.getElementById('parameters-container');
+                const archSection = document.getElementById('architecture-section');
+
+                // Render parameters
+                container.innerHTML = this.selectedModel.parameters.map(param => {
+                    let inputHTML = '';
+                    
+                    switch(param.type) {
+                        case 'range':
+                            inputHTML = `
+                                <div class="slider-container">
+                                    <label class="block text-sm font-medium mb-2">${param.label}</label>
+                                    <input type="range" 
+                                           class="slider" 
+                                           id="param-${param.name}" 
+                                           min="${param.min}" 
+                                           max="${param.max}" 
+                                           step="${param.step || 1}" 
+                                           value="${param.default}">
+                                    <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                        <span>${param.min}</span>
+                                        <span id="value-${param.name}">${param.default}</span>
+                                        <span>${param.max}</span>
+                                    </div>
+                                </div>
+                            `;
+                            break;
+                        case 'checkbox':
+                            inputHTML = `
+                                <label class="block mb-4">
+                                    <input type="checkbox" id="param-${param.name}" ${param.default ? 'checked' : ''} class="mr-2">
+                                    ${param.label}
+                                </label>
+                            `;
+                            break;
+                        case 'select':
+                            inputHTML = `
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium mb-2">${param.label}</label>
+                                    <select id="param-${param.name}" class="w-full p-2 rounded bg-white bg-opacity-10 border border-white border-opacity-20">
+                                        ${param.options.map(opt => `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`).join('')}
+                                    </select>
+                                </div>
+                            `;
+                            break;
+                        case 'text':
+                            inputHTML = `
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium mb-2">${param.label}</label>
+                                    <input type="text" id="param-${param.name}" value="${param.default}" 
+                                           class="w-full p-2 rounded bg-white bg-opacity-10 border border-white border-opacity-20">
+                                </div>
+                            `;
+                            break;
+                    }
+                    
+                    return inputHTML;
+                }).join('');
+
+                // Show/hide architecture builder for neural networks
+                if (this.selectedModel.hasArchitecture) {
+                    archSection.style.display = 'block';
+                } else {
+                    archSection.style.display = 'none';
+                }
+
+                // Add event listeners for range inputs
+                this.selectedModel.parameters.forEach(param => {
+                    if (param.type === 'range') {
+                        const input = document.getElementById(`param-${param.name}`);
+                        const valueDisplay = document.getElementById(`value-${param.name}`);
+                        
+                        input.addEventListener('input', (e) => {
+                            valueDisplay.textContent = e.target.value;
+                        });
+                    }
+                });
+
+                section.style.display = 'block';
+                
+                // Animate section appearance
+                anime({
+                    targets: section,
+                    opacity: [0, 1],
+                    translateY: [30, 0],
+                    duration: 500,
+                    easing: 'easeOutExpo'
+                });
+            }
+
+            setupChart() {
+                const chartContainer = document.getElementById('training-chart');
+                if (!chartContainer) return;
+
+                this.chart = echarts.init(chartContainer);
+                
+                const option = {
+                    backgroundColor: 'transparent',
+                    textStyle: {
+                        color: '#ffffff'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: '#c17817',
+                        textStyle: {
+                            color: '#ffffff'
+                        }
+                    },
+                    legend: {
+                        data: ['Loss', 'Accuracy', 'Val Loss', 'Val Accuracy'],
+                        textStyle: {
+                            color: '#ffffff'
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: [],
+                        axisLine: {
+                            lineStyle: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLine: {
+                            lineStyle: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Loss',
+                            type: 'line',
+                            data: [],
+                            itemStyle: {
+                                color: '#c17817'
+                            }
+                        },
+                        {
+                            name: 'Accuracy',
+                            type: 'line',
+                            data: [],
+                            itemStyle: {
+                                color: '#7c9885'
+                            }
+                        },
+                        {
+                            name: 'Val Loss',
+                            type: 'line',
+                            data: [],
+                            itemStyle: {
+                                color: '#e53e3e'
+                            }
+                        },
+                        {
+                            name: 'Val Accuracy',
+                            type: 'line',
+                            data: [],
+                            itemStyle: {
+                                color: '#3182ce'
+                            }
+                        }
+                    ]
+                };
+
+                this.chart.setOption(option);
+            }
+
+            startTraining() {
+                if (this.trainingInProgress) return;
+
+                this.trainingInProgress = true;
+                this.currentEpoch = 0;
+                this.trainingData = [];
+                
+                // Show training section
+                document.getElementById('training-section').style.display = 'block';
+                
+                // Update UI
+                document.getElementById('training-status').textContent = 'Training...';
+                document.getElementById('play-pause-btn').innerHTML = '⏸️ Pause';
+                
+                // Start training simulation
+                this.simulateTraining();
+            }
+
+            simulateTraining() {
+                if (!this.trainingInProgress) return;
+
+                const speed = parseInt(document.getElementById('speed-slider').value);
+                const interval = Math.max(100, 1000 - speed * 100);
+
+                const trainEpoch = () => {
+                    if (!this.trainingInProgress || this.currentEpoch >= this.maxEpochs) {
+                        this.stopTraining();
+                        return;
+                    }
+
+                    this.currentEpoch++;
+                    
+                    // Simulate training metrics
+                    const loss = Math.max(0.01, 2.0 * Math.exp(-this.currentEpoch / 20) + Math.random() * 0.1);
+                    const accuracy = Math.min(0.99, 0.5 + 0.4 * (1 - Math.exp(-this.currentEpoch / 15)) + Math.random() * 0.05);
+                    const valLoss = Math.max(0.02, loss + Math.random() * 0.2 - 0.1);
+                    const valAccuracy = Math.min(0.99, accuracy + Math.random() * 0.1 - 0.05);
+
+                    // Update metrics display
+                    document.getElementById('loss-metric').textContent = loss.toFixed(3);
+                    document.getElementById('accuracy-metric').textContent = (accuracy * 100).toFixed(1) + '%';
+                    document.getElementById('val-loss-metric').textContent = valLoss.toFixed(3);
+                    document.getElementById('val-accuracy-metric').textContent = (valAccuracy * 100).toFixed(1) + '%';
+                    
+                    document.getElementById('current-epoch').textContent = this.currentEpoch;
+                    
+                    // Update progress bar
+                    const progress = (this.currentEpoch / this.maxEpochs) * 100;
+                    document.getElementById('training-progress').textContent = progress.toFixed(0) + '%';
+                    document.getElementById('training-progress-bar').style.width = progress + '%';
+
+                    // Update chart
+                    this.updateChart(loss, accuracy, valLoss, valAccuracy);
+
+                    setTimeout(trainEpoch, interval);
+                };
+
+                trainEpoch();
+            }
+
+            updateChart(loss, accuracy, valLoss, valAccuracy) {
+                if (!this.chart) return;
+
+                const option = this.chart.getOption();
+                const xData = option.xAxis[0].data;
+                const epochs = this.currentEpoch;
+
+                xData.push(epochs);
+                option.series[0].data.push(loss);
+                option.series[1].data.push(accuracy);
+                option.series[2].data.push(valLoss);
+                option.series[3].data.push(valAccuracy);
+
+                // Keep only last 50 data points
+                if (xData.length > 50) {
+                    xData.shift();
+                    option.series.forEach(series => series.data.shift());
+                }
+
+                this.chart.setOption(option);
+            }
+
+            toggleTraining() {
+                if (this.trainingInProgress) {
+                    this.pauseTraining();
+                } else {
+                    this.resumeTraining();
+                }
+            }
+
+            pauseTraining() {
+                this.trainingInProgress = false;
+                document.getElementById('training-status').textContent = 'Paused';
+                document.getElementById('play-pause-btn').innerHTML = '▶️ Resume';
+            }
+
+            resumeTraining() {
+                this.trainingInProgress = true;
+                document.getElementById('training-status').textContent = 'Training...';
+                document.getElementById('play-pause-btn').innerHTML = '⏸️ Pause';
+                this.simulateTraining();
+            }
+
+            stopTraining() {
+                this.trainingInProgress = false;
+                document.getElementById('training-status').textContent = 'Stopped';
+                document.getElementById('play-pause-btn').innerHTML = '▶️ Start';
+                
+                if (this.currentEpoch >= this.maxEpochs) {
+                    document.getElementById('training-status').textContent = 'Completed!';
+                    this.showNotification('Training completed successfully!', 'success');
+                }
+            }
+
+            resetTraining() {
+                this.stopTraining();
+                this.currentEpoch = 0;
+                this.trainingData = [];
+                
+                // Reset UI
+                document.getElementById('current-epoch').textContent = '0';
+                document.getElementById('training-progress').textContent = '0%';
+                document.getElementById('training-progress-bar').style.width = '0%';
+                document.getElementById('loss-metric').textContent = '0.000';
+                document.getElementById('accuracy-metric').textContent = '0.00%';
+                document.getElementById('val-loss-metric').textContent = '0.000';
+                document.getElementById('val-accuracy-metric').textContent = '0.00%';
+                
+                // Reset chart
+                this.setupChart();
+            }
+
+            setupDragAndDrop() {
+                const builder = document.getElementById('architecture-builder');
+                const layers = document.querySelectorAll('.layer-node');
+
+                layers.forEach(layer => {
+                    layer.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', e.target.dataset.layer);
+                    });
+                });
+
+                builder.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                builder.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const layerType = e.dataTransfer.getData('text/plain');
+                    this.addLayerToArchitecture(layerType, e.offsetX, e.offsetY);
+                });
+            }
+
+            addLayerToArchitecture(type, x, y) {
+                const builder = document.getElementById('architecture-builder');
+                const layer = document.createElement('div');
+                layer.className = 'layer-node';
+                layer.style.position = 'absolute';
+                layer.style.left = x + 'px';
+                layer.style.top = y + 'px';
+                layer.textContent = type.toUpperCase();
+                
+                builder.appendChild(layer);
+            }
+
+            loadComparisonData() {
+                const table = document.getElementById('model-comparison-table');
+                if (!table) return;
+
+                const comparisonData = [
+                    { model: 'Iris Classification', algorithm: 'Random Forest', accuracy: '94.2%', time: '2.3s', status: 'Completed' },
+                    { model: 'Housing Prediction', algorithm: 'Linear Regression', accuracy: '87.5%', time: '1.8s', status: 'Completed' },
+                    { model: 'Customer Churn', algorithm: 'Neural Network', accuracy: '89.1%', time: '45.2s', status: 'Training...' },
+                    { model: 'Image Recognition', algorithm: 'CNN', accuracy: '92.7%', time: '3m 12s', status: 'Completed' }
+                ];
+
+                table.innerHTML = comparisonData.map(row => `
+                    <tr class="border-b border-white border-opacity-5 hover:bg-white hover:bg-opacity-5">
+                        <td class="py-3 px-4">${row.model}</td>
+                        <td class="py-3 px-4">${row.algorithm}</td>
+                        <td class="py-3 px-4 font-bold gradient-text">${row.accuracy}</td>
+                        <td class="py-3 px-4">${row.time}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded text-xs ${row.status === 'Completed' ? 'bg-green-600' : 'bg-yellow-600'}">
+                                ${row.status}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <button class="btn-secondary text-sm px-3 py-1" onclick="viewModelDetails('${row.model}')">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            resetConfiguration() {
+                document.getElementById('configuration-section').style.display = 'none';
+                document.querySelectorAll('.model-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                this.selectedModel = null;
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-20 right-4 glass-card p-4 z-50 max-w-sm ${
+                    type === 'success' ? 'border-green-500' : 
+                    type === 'error' ? 'border-red-500' : 'border-blue-500'
+                }`;
+                notification.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">
+                            ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+                        </div>
+                        <div class="flex-1">${message}</div>
+                        <button onclick="this.closest('.glass-card').remove()" class="text-gray-400 hover:text-white">✕</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Global Functions
+        function selectModel(modelId) {
+            window.modelTrainer.selectModel(modelId);
+        }
+
+        function startTraining() {
+            window.modelTrainer.startTraining();
+        }
+
+        function toggleTraining() {
+            window.modelTrainer.toggleTraining();
+        }
+
+        function stopTraining() {
+            window.modelTrainer.stopTraining();
+        }
+
+        function resetTraining() {
+            window.modelTrainer.resetTraining();
+        }
+
+        function resetConfiguration() {
+            window.modelTrainer.resetConfiguration();
+        }
+
+        function viewModelDetails(modelName) {
+            window.modelTrainer.showNotification(`Viewing details for ${modelName}`, 'info');
+        }
+
+        function proceedToResults() {
+            window.location.href = 'results.html';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            window.modelTrainer = new ModelTrainer();
+        });
+    </script>
+</body>
+</html>
